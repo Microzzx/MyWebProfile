@@ -14,37 +14,73 @@ type VolumeProps = {
 
 const Volume: React.FC<VolumeProps> = ({ min = 0, max = 1 }) => {
   const { volume, setVolume } = usePlayerStore();
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setVolume(parseFloat(event.target.value));
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setVolume(parseFloat(e.target.value));
   };
+
+  const toggleMute = () => {
+    setVolume(volume === 0 ? 0.7 : 0);
+  };
+
+  const VolumeIcon =
+    volume === 0
+      ? BsFillVolumeMuteFill
+      : volume <= 0.5
+      ? BsVolumeDownFill
+      : BsFillVolumeUpFill;
+
+  const percent = (volume / max) * 100;
+
   return (
-    <div className="flex items-center">
-      {volume <= 1 && volume > 0.5 && (
-        <BsFillVolumeUpFill
-          size={20}
-          color="#fff"
-          onClick={() => setVolume(0)}
+    <div className="flex items-center gap-1.5">
+      <button
+        onClick={toggleMute}
+        aria-label={volume === 0 ? "Unmute" : "Mute"}
+        className="text-white/35 hover:text-white/80 transition-colors cursor-pointer p-1"
+      >
+        <VolumeIcon size={17} />
+      </button>
+
+      {/* Slider with violet fill */}
+      <div className="relative flex items-center group" style={{ width: 64, height: 16 }}>
+        <div className="absolute inset-y-0 flex items-center w-full pointer-events-none">
+          <div className="w-full h-[3px] rounded-full bg-white/10 overflow-hidden">
+            <div
+              className="h-full bg-violet-400 rounded-full"
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+        </div>
+
+        <input
+          type="range"
+          value={volume}
+          min={min}
+          max={max}
+          step={0.01}
+          onChange={handleChange}
+          aria-label="Volume"
+          className="
+            relative w-full h-[3px] appearance-none bg-transparent cursor-pointer
+            [&::-webkit-slider-thumb]:appearance-none
+            [&::-webkit-slider-thumb]:w-3
+            [&::-webkit-slider-thumb]:h-3
+            [&::-webkit-slider-thumb]:rounded-full
+            [&::-webkit-slider-thumb]:bg-white
+            [&::-webkit-slider-thumb]:opacity-0
+            group-hover:[&::-webkit-slider-thumb]:opacity-100
+            [&::-webkit-slider-thumb]:transition-opacity
+            [&::-moz-range-thumb]:w-3
+            [&::-moz-range-thumb]:h-3
+            [&::-moz-range-thumb]:rounded-full
+            [&::-moz-range-thumb]:bg-white
+            [&::-moz-range-thumb]:border-0
+            [&::-moz-range-thumb]:opacity-0
+            group-hover:[&::-moz-range-thumb]:opacity-100
+          "
         />
-      )}
-      {volume <= 0.5 && volume > 0 && (
-        <BsVolumeDownFill size={20} color="#fff" onClick={() => setVolume(0)} />
-      )}
-      {volume === 0 && (
-        <BsFillVolumeMuteFill
-          size={20}
-          color="#fff"
-          onClick={() => setVolume(0.2)}
-        />
-      )}
-      <input
-        type="range"
-        step="any"
-        value={volume}
-        min={min}
-        max={max}
-        onChange={handleChange}
-        className="xl:w-20 lg:w-20 h-1.5 ml-2 accent-white"
-      />
+      </div>
     </div>
   );
 };

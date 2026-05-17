@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import styles from "@/styles/songBar.module.css";
 import { MdSkipNext, MdSkipPrevious } from "react-icons/md";
 import { BsFillPauseFill, BsFillPlayFill } from "react-icons/bs";
 import { usePlayerStore } from "@/feature/player/store";
@@ -17,42 +16,55 @@ const Control: React.FC<ControlProps> = ({
   handlePrevSong,
 }) => {
   const { songList, isPlaying } = usePlayerStore();
+
+  const iconBtn =
+    "flex items-center justify-center p-2 rounded-xl text-white/40 hover:text-white/90 hover:bg-white/8 transition-all cursor-pointer";
+
   return (
-    <>
-      <div className="flex items-center justify-start gap-5">
-        <div className="hidden lg:flex">
-          {songList?.length && (
-            <MdSkipPrevious
-              color="#FFF"
-              className={`cursor-pointer ${styles["songbar-icon-1"]}`}
-              onClick={handlePrevSong}
-            />
-          )}
-        </div>
-        {isPlaying ? (
-          <BsFillPauseFill
-            color="#FFF"
-            onClick={handlePlayPause}
-            className={`cursor-pointer ${styles["songbar-icon-2"]}`}
-          />
-        ) : (
-          <BsFillPlayFill
-            color="#FFF"
-            onClick={handlePlayPause}
-            className={`cursor-pointer ${styles["songbar-icon-2"]}`}
-          />
+    <div className="flex items-center gap-1">
+      {/* Prev — hidden on mobile, parent controls visibility */}
+      <div className="hidden lg:flex">
+        {songList?.length && (
+          <button
+            aria-label="Previous song"
+            onClick={handlePrevSong}
+            className={iconBtn}
+          >
+            <MdSkipPrevious size={22} />
+          </button>
         )}
-        <div className="hidden lg:flex">
-          {songList?.length && (
-            <MdSkipNext
-              color="#FFF"
-              className={`cursor-pointer ${styles["songbar-icon-1"]}`}
-              onClick={handleNextSong}
-            />
-          )}
-        </div>
       </div>
-    </>
+
+      {/* Play / Pause — primary action, violet pill */}
+      <button
+        aria-label={isPlaying ? "Pause" : "Play"}
+        onClick={handlePlayPause}
+        className="
+          flex items-center justify-center
+          w-10 h-10 rounded-xl
+          bg-violet-500 hover:bg-violet-400
+          active:scale-95
+          text-white
+          transition-all cursor-pointer
+          shadow-lg shadow-violet-900/40
+        "
+      >
+        {isPlaying ? <BsFillPauseFill size={18} /> : <BsFillPlayFill size={18} />}
+      </button>
+
+      {/* Next — hidden on mobile */}
+      <div className="hidden lg:flex">
+        {songList?.length && (
+          <button
+            aria-label="Next song"
+            onClick={handleNextSong}
+            className={iconBtn}
+          >
+            <MdSkipNext size={22} />
+          </button>
+        )}
+      </div>
+    </div>
   );
 };
 

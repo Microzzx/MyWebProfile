@@ -23,12 +23,13 @@ const Player: React.FC<PlayerProps> = ({ onEnded }) => {
     setCurrentTime(ref.current.currentTime);
   };
 
-  const handleLoadMetaData = (): void => {
+  const handleLoadedMetadata = (): void => {
     if (!ref.current) return;
     setDuration(ref.current.duration);
     ref.current.volume = volume;
   };
 
+  // Play / pause when state changes
   useEffect(() => {
     if (!ref.current || !songList) return;
     if (isPlaying) {
@@ -38,20 +39,22 @@ const Player: React.FC<PlayerProps> = ({ onEnded }) => {
     }
   }, [isPlaying, activeSong, songList]);
 
+  // Sync volume
   useEffect(() => {
     if (!ref.current) return;
     ref.current.volume = volume;
   }, [volume]);
 
   if (!songList) return null;
+
   return (
     <audio
       crossOrigin="anonymous"
-      onTimeUpdate={handleTimeUpdate}
-      onLoadedMetadata={handleLoadMetaData}
-      src={songList[activeSong].url}
       ref={ref}
+      src={songList[activeSong].url}
       loop={false}
+      onTimeUpdate={handleTimeUpdate}
+      onLoadedMetadata={handleLoadedMetadata}
       onEnded={onEnded}
     />
   );
