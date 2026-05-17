@@ -10,8 +10,6 @@ import data from "../../../public/data/myChart.json";
 import {
   MdShuffle,
   MdRepeat,
-  MdFavoriteBorder,
-  MdFavorite,
   MdRemove,
 } from "react-icons/md";
 
@@ -102,7 +100,6 @@ const SongBar = ({ className, ...rest }: Props) => {
     setCurrentTime,
   } = usePlayerStore();
 
-  const [liked, setLiked] = useState(false);
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState(false);
   const [dragPosition, setDragPosition] = useState<DragPosition | null>(null);
@@ -319,42 +316,34 @@ const SongBar = ({ className, ...rest }: Props) => {
             : undefined
         }
         className={`
-          hidden lg:flex items-stretch
+          hidden lg:block
           fixed z-50 select-none touch-none
           ${isDragging ? "cursor-grabbing" : "cursor-grab"}
-          ${isFreePositioned ? "" : "bottom-8 transition-[right] duration-500 ease-in-out"}
-          ${isFreePositioned ? "" : toggle ? "right-0" : "right-[-436px]"}
+          ${isFreePositioned ? "" : "right-8 bottom-8"}
           ${className ?? ""}
         `}
         aria-label="Music player"
         {...rest}
       >
-        {/* Toggle tab */}
-        <button
-          data-songbar-drag-handle
-          onMouseDown={handleHandleMouseDown}
-          onTouchStart={handleHandleTouchStart}
-          onClick={handleTogglePlayer}
-          aria-label={toggle ? "Hide player" : "Show player"}
-          className={`
-            flex flex-col items-center justify-center gap-1.5 flex-shrink-0
-            bg-zinc-950/90 hover:bg-zinc-900/95 backdrop-blur-xl
-            border border-white/[0.07]
-            text-white/35 hover:text-white/75
-            shadow-2xl shadow-black/45
-            transition-all duration-300 ease-in-out cursor-grab active:cursor-grabbing
-            ${
-              toggle
-                ? "w-10 self-stretch rounded-l-2xl border-r-0"
-                : "h-16 w-16 self-center rounded-xl"
-            }
-          `}
-        >
-          <MdRemove size={16} />
-          {isPlaying && (
-            <span className="w-[5px] h-[5px] rounded-full bg-violet-400 animate-pulse" />
-          )}
-        </button>
+        {!toggle && (
+          <button
+            data-songbar-drag-handle
+            onMouseDown={handleHandleMouseDown}
+            onTouchStart={handleHandleTouchStart}
+            onClick={handleTogglePlayer}
+            aria-label="Show player"
+            className="
+              absolute right-5 top-5 z-10 flex h-8 w-8 items-center justify-center rounded-lg
+              bg-zinc-950/90 hover:bg-zinc-900/95 backdrop-blur-xl
+              border border-white/[0.07]
+              text-white/35 hover:text-white/75
+              shadow-2xl shadow-black/45
+              transition-all duration-300 ease-in-out cursor-grab active:cursor-grabbing
+            "
+          >
+            <MdRemove size={18} />
+          </button>
+        )}
 
         {/* Card */}
         <div
@@ -362,14 +351,14 @@ const SongBar = ({ className, ...rest }: Props) => {
             flex min-w-0 flex-col
             bg-[linear-gradient(145deg,rgba(24,24,27,0.96),rgba(9,9,11,0.98))]
             backdrop-blur-xl
-            rounded-r-2xl overflow-hidden
+            rounded-2xl overflow-hidden
             shadow-2xl shadow-black/50
             ring-1 ring-white/[0.04]
-            transition-[width,opacity,border-color,transform] duration-300 ease-in-out
+            transition-[opacity,border-color,transform] duration-300 ease-in-out
             ${
               toggle
-                ? "w-[436px] translate-x-0 opacity-100 border border-l-0 border-white/[0.07]"
-                : "w-0 -translate-x-2 opacity-0 border-0 pointer-events-none"
+                ? "w-[436px] translate-x-0 opacity-100 border border-white/[0.07]"
+                : "w-[436px] scale-95 opacity-0 border border-transparent pointer-events-none"
             }
           `}
         >
@@ -400,19 +389,18 @@ const SongBar = ({ className, ...rest }: Props) => {
               <Waveform active={isPlaying} />
 
               <button
-                onClick={() => setLiked(!liked)}
-                aria-label={liked ? "Unlike" : "Like"}
-                className={`
-                  flex-shrink-0 p-1.5 rounded-lg
-                  transition-all cursor-pointer active:scale-90
-                  ${liked ? "text-pink-400" : "text-white/25 hover:text-pink-400"}
-                `}
+                data-songbar-drag-handle
+                onMouseDown={handleHandleMouseDown}
+                onTouchStart={handleHandleTouchStart}
+                onClick={handleTogglePlayer}
+                aria-label="Hide player"
+                className="
+                  flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg
+                  text-white/25 hover:text-white/75 hover:bg-white/8
+                  transition-all cursor-grab active:cursor-grabbing
+                "
               >
-                {liked ? (
-                  <MdFavorite size={20} />
-                ) : (
-                  <MdFavoriteBorder size={20} />
-                )}
+                <MdRemove size={18} />
               </button>
             </div>
 
@@ -453,13 +441,13 @@ const SongBar = ({ className, ...rest }: Props) => {
           MOBILE — full-width bottom bar
       ══════════════════════════════════════════════════ */}
       <div
-        className="
-          flex lg:hidden flex-col
+        className={`
+          ${toggle ? "flex" : "hidden"} lg:hidden flex-col
           fixed bottom-0 left-0 right-0 z-50
           bg-zinc-900/98 backdrop-blur-xl
           border-t border-white/[0.07]
           pb-[env(safe-area-inset-bottom)]
-        "
+        `}
         aria-label="Music player"
       >
         {/* Thin seek-progress line */}
@@ -486,16 +474,15 @@ const SongBar = ({ className, ...rest }: Props) => {
             </p> */}
           </div>
 
-          {/* Like */}
           <button
-            onClick={() => setLiked(!liked)}
-            aria-label={liked ? "Unlike" : "Like"}
-            className={`
+            onClick={handleTogglePlayer}
+            aria-label="Hide player"
+            className="
               p-2 transition-all cursor-pointer active:scale-90 flex-shrink-0
-              ${liked ? "text-pink-400" : "text-white/25 hover:text-pink-400"}
-            `}
+              text-white/25 hover:text-white/75
+            "
           >
-            {liked ? <MdFavorite size={22} /> : <MdFavoriteBorder size={22} />}
+            <MdRemove size={22} />
           </button>
 
           {/* Play + Next only (prev hidden on mobile via Control's hidden lg:flex) */}
@@ -506,6 +493,20 @@ const SongBar = ({ className, ...rest }: Props) => {
           />
         </div>
       </div>
+      {!toggle && (
+        <button
+          onClick={handleTogglePlayer}
+          aria-label="Show player"
+          className="
+            fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center
+            rounded-xl border border-white/[0.07] bg-zinc-950/90 backdrop-blur-xl
+            text-white/35 shadow-2xl shadow-black/45 transition-all
+            hover:bg-zinc-900/95 hover:text-white/75 active:scale-95 lg:hidden
+          "
+        >
+          <MdRemove size={22} />
+        </button>
+      )}
     </>
   );
 };
