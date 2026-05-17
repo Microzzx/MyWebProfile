@@ -1,9 +1,14 @@
 "use client";
 import React, { ChangeEvent } from "react";
 import { usePlayerStore } from "@/feature/player/store";
-import styles from "@/styles/songBar.module.css";
 
-const Progress = () => {
+type Props = {
+  width?: number;
+  height?: number;
+  className?: string;
+};
+
+const Progress = ({ width = 64, height = 64, className }: Props) => {
   const { currentTime, duration, isSeeking, setCurrentTime, setSeeking } =
     usePlayerStore();
   const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
@@ -25,7 +30,10 @@ const Progress = () => {
     return `${min}:${sec.toString().padStart(2, "0")}`;
   };
   return (
-    <div className="flex items-center">
+    <div
+      style={{ width, height }}
+      className={`flex items-center gap-3 ${className}`}
+    >
       <input
         type="range"
         value={currentTime}
@@ -34,9 +42,9 @@ const Progress = () => {
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onChange={handleChange}
-        className="w-64 h-1.5 ml-2 accent-white"
+        className="flex-1 accent-white"
       />
-      <span className="text-xs text-gray-400 w-10">
+      <span className="text-xs text-white">
         {formatTime(currentTime)} / {formatTime(duration)}
       </span>
     </div>

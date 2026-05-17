@@ -3,6 +3,7 @@ import styles from "@/styles/songBar.module.css";
 import { useState, useEffect } from "react";
 import { usePlayerStore } from "@/feature/player/store";
 import Track from "./SongbarComponents/Track";
+import Progress from "./SongbarComponents/Progress";
 import Control from "./SongbarComponents/Control";
 import Volume from "./SongbarComponents/Volume";
 import Player from "./SongbarComponents/Player";
@@ -68,13 +69,13 @@ const SongBar = ({ className, ...rest }: Props) => {
   return (
     <>
       <Player onEnded={handleNextSong} />
+      {/* normal screen */}
       <div
-        className={`hidden lg:flex ${className} ${
-          toggle ? "right-0 " : "right-[-480px]"
-        } items-center w-[500px] h-[100px] bg-black/30 rounded-l-lg transition-all duration-400 ease-in-out bottom-10 fixed`}
+        className={`hidden lg:flex ${className} ${toggle ? "right-0 " : "right-[-480px]"} 
+      items-center w-[500px] h-[300px] bg-black/30 rounded-l-lg transition-all duration-400 ease-in-out bottom-10 fixed`}
         {...rest}
       >
-        <div className="flex items-center justify-center">
+        <div className="flex items-center">
           {toggle ? (
             <MdOutlineArrowForwardIos
               className={`cursor-pointer ${styles["songbar-icon-1"]}`}
@@ -88,8 +89,9 @@ const SongBar = ({ className, ...rest }: Props) => {
           )}
         </div>
 
-        <div className="flex items-center justify-center ms-5 gap-10">
-          <Track />
+        <div className="flex-1 flex flex-col items-center ms-5 gap-4">
+          <Track width={150} height={100} />
+          <Progress width={300} height={25} />
           <div className="flex flex-col gap-3">
             <Control
               handlePlayPause={handlePlayPause}
@@ -101,7 +103,7 @@ const SongBar = ({ className, ...rest }: Props) => {
         </div>
       </div>
 
-      {/* small device */}
+      {/* small screen */}
       <div className="flex lg:hidden items-center bottom-5 right-5 fixed">
         <Track />
         <div className="flex absolute items-center justify-center h-16 w-16">
