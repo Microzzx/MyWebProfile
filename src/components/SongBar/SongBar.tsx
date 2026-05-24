@@ -66,7 +66,7 @@ const ModeBtn = ({
       ${
         on
           ? "text-violet-400 hover:text-violet-300"
-          : "text-white/25 hover:text-white/60"
+          : "player-subtle player-control"
       }
     `}
   >
@@ -108,12 +108,12 @@ const SongBar = ({ className, ...rest }: Props) => {
   /* Load playlist once */
   useEffect(() => {
     setSong(data.tracks);
-  }, []);
+  }, [setSong]);
 
   /* Auto-play on track change */
   useEffect(() => {
     if (songList) setPlaying(true);
-  }, [activeSong]);
+  }, [activeSong, setPlaying, songList]);
 
   const handlePlayPause = () => setPlaying(!isPlaying);
 
@@ -332,12 +332,12 @@ const SongBar = ({ className, ...rest }: Props) => {
           onClick={handleTogglePlayer}
           aria-label={toggle ? "Hide player" : "Show player"}
           className={`
-            absolute right-[21px] top-[27px] z-10 flex h-8 w-8 items-center justify-center rounded-lg
+            absolute right-[36px] top-[27px] z-10 flex h-8 w-8 items-center justify-center rounded-lg
             transition-all duration-300 ease-in-out cursor-grab active:cursor-grabbing
             ${
               toggle
-                ? "text-white/25 hover:text-white/75 hover:bg-white/8"
-                : "bg-zinc-950/90 hover:bg-zinc-900/95 backdrop-blur-xl border border-white/[0.07] text-white/35 hover:text-white/75 shadow-2xl shadow-black/45"
+                ? "player-subtle player-control"
+                : "player-float-button border shadow-2xl shadow-black/20 backdrop-blur-xl player-control"
             }
           `}
         >
@@ -348,15 +348,15 @@ const SongBar = ({ className, ...rest }: Props) => {
         <div
           className={`
             flex min-w-0 flex-col
-            bg-[linear-gradient(145deg,rgba(24,24,27,0.96),rgba(9,9,11,0.98))]
+            player-surface
             backdrop-blur-xl
             rounded-2xl overflow-hidden
             shadow-2xl shadow-black/50
-            ring-1 ring-white/[0.04]
+            ring-1 ring-[var(--player-border)]
             transition-[opacity,border-color,transform] duration-300 ease-in-out
             ${
               toggle
-                ? "w-[436px] translate-x-0 opacity-100 border border-white/[0.07]"
+                ? "w-[436px] translate-x-0 opacity-100 border"
                 : "w-[436px] scale-95 opacity-0 border border-transparent pointer-events-none"
             }
           `}
@@ -367,12 +367,12 @@ const SongBar = ({ className, ...rest }: Props) => {
           <div className="flex flex-col gap-4 px-5 pt-4 pb-5">
             {/* ── Row 1: Album art | info | waveform | like ── */}
             <div className="flex items-center gap-3">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden ring-1 ring-white/[0.12]">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden ring-1 ring-[var(--player-border)]">
                 <Track width={48} height={48} />
               </div>
 
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white/90 truncate leading-tight tracking-tight">
+                <p className="player-text text-sm font-semibold truncate leading-tight tracking-tight">
                   {currentTrack?.title ?? "—"}
                 </p>
                 {/* <p className="text-[11px] text-white/35 truncate mt-0.5">
@@ -430,14 +430,14 @@ const SongBar = ({ className, ...rest }: Props) => {
         className={`
           ${toggle ? "flex" : "hidden"} lg:hidden flex-col
           fixed bottom-0 left-0 right-0 z-50
-          bg-zinc-900/98 backdrop-blur-xl
-          border-t border-white/[0.07]
+          player-surface backdrop-blur-xl
+          border-t
           pb-[env(safe-area-inset-bottom)]
         `}
         aria-label="Music player"
       >
         {/* Thin seek-progress line */}
-        <div className="h-[2px] w-full bg-white/[0.06]">
+        <div className="player-track h-[2px] w-full">
           <div
             className="h-full bg-violet-500 transition-none rounded-full"
             style={{ width: `${progressPct}%` }}
@@ -446,13 +446,13 @@ const SongBar = ({ className, ...rest }: Props) => {
 
         <div className="flex items-center gap-3 px-4 py-3">
           {/* Album art */}
-          <div className="flex-shrink-0 w-11 h-11 rounded-full overflow-hidden ring-1 ring-white/10">
+          <div className="flex-shrink-0 w-11 h-11 rounded-full overflow-hidden ring-1 ring-[var(--player-border)]">
             <Track width={44} height={44} />
           </div>
 
           {/* Song info */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white/90 truncate leading-tight">
+            <p className="player-text text-sm font-semibold truncate leading-tight">
               {currentTrack?.title ?? "—"}
             </p>
             {/* <p className="text-[11px] text-white/35 truncate">
@@ -465,7 +465,7 @@ const SongBar = ({ className, ...rest }: Props) => {
             aria-label="Hide player"
             className="
               p-2 transition-all cursor-pointer active:scale-90 flex-shrink-0
-              text-white/25 hover:text-white/75
+              player-subtle player-control
             "
           >
             <MdRemove size={22} />
@@ -485,9 +485,9 @@ const SongBar = ({ className, ...rest }: Props) => {
           aria-label="Show player"
           className="
             fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center
-            rounded-xl border border-white/[0.07] bg-zinc-950/90 backdrop-blur-xl
-            text-white/35 shadow-2xl shadow-black/45 transition-all
-            hover:bg-zinc-900/95 hover:text-white/75 active:scale-95 lg:hidden
+            player-float-button rounded-xl border backdrop-blur-xl
+            shadow-2xl shadow-black/20 transition-all player-control
+            active:scale-95 lg:hidden
           "
         >
           <MdRemove size={22} />

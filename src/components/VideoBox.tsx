@@ -6,7 +6,7 @@ const VideoBox = ({ className, ...rest }: Props) => {
       <video className="h-full w-full object-cover" autoPlay loop muted playsInline>
         <source src="/videos/Sequence.mp4" type="video/mp4" />
       </video>
-      <div className="absolute inset-0 bg-zinc-950/65" />
+      <div className="theme-backdrop absolute inset-0" />
     </div>
   );
 };

@@ -18,7 +18,7 @@ const Control: React.FC<ControlProps> = ({
   const { songList, isPlaying } = usePlayerStore();
 
   const iconBtn =
-    "flex items-center justify-center p-2 rounded-xl text-white/40 hover:text-white/90 hover:bg-white/8 transition-all cursor-pointer";
+    "player-muted player-control flex items-center justify-center p-2 rounded-xl transition-all cursor-pointer";
 
   return (
     <div className="flex items-center gap-1">

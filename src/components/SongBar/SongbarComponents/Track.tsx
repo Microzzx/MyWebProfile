@@ -24,7 +24,7 @@ const Track = ({ width = 48, height = 48, className, showInfo = false }: Props) 
         style={{ width, height }}
         className={`
           rounded-full overflow-hidden flex-shrink-0
-          ring-1 ring-white/10
+          ring-1 ring-[var(--player-border)]
           animate-[spin_8s_linear_infinite]
           ${!isPlaying ? "[animation-play-state:paused]" : ""}
         `}
@@ -39,11 +39,11 @@ const Track = ({ width = 48, height = 48, className, showInfo = false }: Props) 
 
       {/* Optional info block — shown only in full desktop bar */}
       {showInfo && (
-        <div className="w-full text-center text-xs font-medium text-white/80 truncate px-1">
+        <div className="player-text w-full text-center text-xs font-medium truncate px-1">
           {isPlaying ? (
             <WaveText text={`Now playing · ${currentTrack.title}`} />
           ) : (
-            <span className="text-white/40">Paused</span>
+            <span className="player-muted">Paused</span>
           )}
         </div>
       )}

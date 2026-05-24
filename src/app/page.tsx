@@ -56,14 +56,14 @@ const SectionHeading = ({
   description?: string;
 }) => (
   <div className="mb-7">
-    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-violet-300">
+    <p className="theme-accent-text mb-3 text-xs font-semibold uppercase tracking-[0.3em]">
       {eyebrow}
     </p>
-    <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+    <h2 className="theme-text-primary text-2xl font-semibold tracking-tight sm:text-3xl">
       {title}
     </h2>
     {description && (
-      <p className="mt-3 max-w-2xl text-sm leading-7 text-white/55 sm:text-base">
+      <p className="theme-text-muted mt-3 max-w-2xl text-sm leading-7 sm:text-base">
         {description}
       </p>
     )}
@@ -75,18 +75,18 @@ export default function HomePage() {
     <div className="flex flex-col gap-5 sm:gap-6">
       <SectionBox
         id="Profile"
-        className="relative overflow-hidden bg-[linear-gradient(135deg,rgba(24,24,27,0.94),rgba(15,12,28,0.94))] px-6 py-10 sm:px-10 sm:py-12"
+        className="theme-hero relative overflow-hidden px-6 py-10 sm:px-10 sm:py-12"
       >
         <div className="pointer-events-none absolute -right-32 -top-32 h-80 w-80 rounded-full bg-violet-500/15 blur-3xl" />
         <div className="relative max-w-3xl">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.32em] text-violet-300">
+          <p className="theme-accent-text mb-4 text-xs font-semibold uppercase tracking-[0.32em]">
             Backend / Web Developer
           </p>
-          <h1 className="text-4xl font-semibold leading-tight tracking-tight text-white sm:text-6xl">
+          <h1 className="theme-text-primary text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">
             Janekit
-            <span className="block text-white/45">Prakittawornkul</span>
+            <span className="theme-text-subtle block">Prakittawornkul</span>
           </h1>
-          <p className="mt-6 max-w-2xl text-base leading-8 text-white/65 sm:text-lg">
+          <p className="theme-text-muted mt-6 max-w-2xl text-base leading-8 sm:text-lg">
             I build web applications and backend services with Golang, Java,
             React, and Next.js, with experience in telecom integrations,
             database performance, and full-stack product delivery.
@@ -101,7 +101,7 @@ export default function HomePage() {
             </Link>
             <Link
               href="#Contact"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.04] px-5 py-3 text-sm font-medium text-white/75 transition-colors hover:bg-white/[0.09] hover:text-white"
+              className="theme-card theme-text-muted theme-hover inline-flex items-center gap-2 rounded-xl border px-5 py-3 text-sm font-medium transition-colors"
             >
               Contact me
               <BsArrowUpRight />
@@ -124,10 +124,10 @@ export default function HomePage() {
           ].map((item) => (
             <div
               key={item.label}
-              className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5"
+              className="theme-card rounded-2xl border p-5"
             >
-              <p className="text-xl font-semibold text-white">{item.value}</p>
-              <p className="mt-2 text-sm leading-6 text-white/50">{item.label}</p>
+              <p className="theme-text-primary text-xl font-semibold">{item.value}</p>
+              <p className="theme-text-muted mt-2 text-sm leading-6">{item.label}</p>
             </div>
           ))}
         </div>
@@ -143,20 +143,20 @@ export default function HomePage() {
           {EXPERIENCES.map((experience) => (
             <article
               key={experience.role}
-              className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5 sm:p-6"
+              className="theme-card rounded-2xl border p-5 sm:p-6"
             >
               <div className="mb-5 flex flex-col justify-between gap-2 sm:flex-row sm:items-start">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">
+                  <h3 className="theme-text-primary text-lg font-semibold">
                     {experience.role}
                   </h3>
-                  <p className="mt-1 text-sm text-violet-300">{experience.company}</p>
+                  <p className="theme-accent-text mt-1 text-sm">{experience.company}</p>
                 </div>
-                <span className="w-fit rounded-full border border-white/[0.08] px-3 py-1 text-xs text-white/50">
+                <span className="theme-text-muted w-fit rounded-full border border-[var(--inner-border)] px-3 py-1 text-xs">
                   {experience.period}
                 </span>
               </div>
-              <ul className="space-y-3 text-sm leading-7 text-white/60">
+              <ul className="theme-text-muted space-y-3 text-sm leading-7">
                 {experience.points.map((point) => (
                   <li key={point} className="flex gap-3">
                     <span className="mt-[11px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-violet-400" />
@@ -175,16 +175,16 @@ export default function HomePage() {
           {SKILL_GROUPS.map((group) => (
             <div
               key={group.title}
-              className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5"
+              className="theme-card rounded-2xl border p-5"
             >
-              <h3 className="mb-4 text-sm font-semibold text-violet-300">
+              <h3 className="theme-accent-text mb-4 text-sm font-semibold">
                 {group.title}
               </h3>
               <div className="flex flex-wrap gap-2">
                 {group.skills.map((skill) => (
                   <span
                     key={skill}
-                    className="rounded-lg bg-white/[0.06] px-3 py-2 text-xs text-white/70"
+                    className="theme-accent-soft theme-text-muted rounded-lg px-3 py-2 text-xs"
                   >
                     {skill}
                   </span>
@@ -201,18 +201,18 @@ export default function HomePage() {
           {EDUCATION.map((education) => (
             <article
               key={education.institution}
-              className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5"
+              className="theme-card rounded-2xl border p-5"
             >
-              <p className="text-xs uppercase tracking-[0.2em] text-white/35">
+              <p className="theme-text-subtle text-xs uppercase tracking-[0.2em]">
                 {education.period}
               </p>
-              <h3 className="mt-3 text-base font-semibold leading-7 text-white">
+              <h3 className="theme-text-primary mt-3 text-base font-semibold leading-7">
                 {education.institution}
               </h3>
-              <p className="mt-2 text-sm leading-6 text-white/55">
+              <p className="theme-text-muted mt-2 text-sm leading-6">
                 {education.qualification}
               </p>
-              <p className="mt-4 inline-flex rounded-full bg-violet-500/10 px-3 py-1 text-xs text-violet-300">
+              <p className="theme-accent-soft theme-accent-text mt-4 inline-flex rounded-full px-3 py-1 text-xs">
                 {education.result}
               </p>
             </article>
@@ -229,26 +229,26 @@ export default function HomePage() {
         <div className="grid gap-3 md:grid-cols-3">
           <a
             href="mailto:janekitpk1@gmail.com"
-            className="flex items-center gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4 transition-colors hover:border-violet-400/30 hover:bg-violet-500/[0.06]"
+            className="theme-card theme-contact flex items-center gap-4 rounded-2xl border p-4 transition-colors"
           >
-            <BsEnvelope className="text-xl text-violet-300" />
-            <span className="text-sm text-white/70">janekitpk1@gmail.com</span>
+            <BsEnvelope className="theme-accent-text text-xl" />
+            <span className="theme-text-muted text-sm">janekitpk1@gmail.com</span>
           </a>
           <a
             href="tel:+66935813035"
-            className="flex items-center gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4 transition-colors hover:border-violet-400/30 hover:bg-violet-500/[0.06]"
+            className="theme-card theme-contact flex items-center gap-4 rounded-2xl border p-4 transition-colors"
           >
-            <BsTelephone className="text-xl text-violet-300" />
-            <span className="text-sm text-white/70">093-581-3035</span>
+            <BsTelephone className="theme-accent-text text-xl" />
+            <span className="theme-text-muted text-sm">093-581-3035</span>
           </a>
           <a
             href="https://github.com/Microzzx"
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4 transition-colors hover:border-violet-400/30 hover:bg-violet-500/[0.06]"
+            className="theme-card theme-contact flex items-center gap-4 rounded-2xl border p-4 transition-colors"
           >
-            <BsGithub className="text-xl text-violet-300" />
-            <span className="text-sm text-white/70">github.com/Microzzx</span>
+            <BsGithub className="theme-accent-text text-xl" />
+            <span className="theme-text-muted text-sm">github.com/Microzzx</span>
           </a>
         </div>
       </SectionBox>
