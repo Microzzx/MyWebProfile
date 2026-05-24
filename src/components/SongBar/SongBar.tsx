@@ -325,25 +325,24 @@ const SongBar = ({ className, ...rest }: Props) => {
         aria-label="Music player"
         {...rest}
       >
-        {!toggle && (
-          <button
-            data-songbar-drag-handle
-            onMouseDown={handleHandleMouseDown}
-            onTouchStart={handleHandleTouchStart}
-            onClick={handleTogglePlayer}
-            aria-label="Show player"
-            className="
-              absolute right-5 top-5 z-10 flex h-8 w-8 items-center justify-center rounded-lg
-              bg-zinc-950/90 hover:bg-zinc-900/95 backdrop-blur-xl
-              border border-white/[0.07]
-              text-white/35 hover:text-white/75
-              shadow-2xl shadow-black/45
-              transition-all duration-300 ease-in-out cursor-grab active:cursor-grabbing
-            "
-          >
-            <MdRemove size={18} />
-          </button>
-        )}
+        <button
+          data-songbar-drag-handle
+          onMouseDown={handleHandleMouseDown}
+          onTouchStart={handleHandleTouchStart}
+          onClick={handleTogglePlayer}
+          aria-label={toggle ? "Hide player" : "Show player"}
+          className={`
+            absolute right-[21px] top-[27px] z-10 flex h-8 w-8 items-center justify-center rounded-lg
+            transition-all duration-300 ease-in-out cursor-grab active:cursor-grabbing
+            ${
+              toggle
+                ? "text-white/25 hover:text-white/75 hover:bg-white/8"
+                : "bg-zinc-950/90 hover:bg-zinc-900/95 backdrop-blur-xl border border-white/[0.07] text-white/35 hover:text-white/75 shadow-2xl shadow-black/45"
+            }
+          `}
+        >
+          <MdRemove size={18} />
+        </button>
 
         {/* Card */}
         <div
@@ -388,20 +387,7 @@ const SongBar = ({ className, ...rest }: Props) => {
 
               <Waveform active={isPlaying} />
 
-              <button
-                data-songbar-drag-handle
-                onMouseDown={handleHandleMouseDown}
-                onTouchStart={handleHandleTouchStart}
-                onClick={handleTogglePlayer}
-                aria-label="Hide player"
-                className="
-                  flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg
-                  text-white/25 hover:text-white/75 hover:bg-white/8
-                  transition-all cursor-grab active:cursor-grabbing
-                "
-              >
-                <MdRemove size={18} />
-              </button>
+              <div className="h-8 w-8 flex-shrink-0" aria-hidden />
             </div>
 
             {/* ── Row 2: Progress bar ── */}
