@@ -1,9 +1,159 @@
 @import "tailwindcss";
+
+:root {
+  --page-text: rgba(255, 255, 255, 0.96);
+  --text-muted: rgba(255, 255, 255, 0.64);
+  --text-subtle: rgba(255, 255, 255, 0.42);
+  --panel-bg: rgba(9, 9, 11, 0.76);
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --inner-bg: rgba(255, 255, 255, 0.035);
+  --inner-border: rgba(255, 255, 255, 0.07);
+  --hero-bg: linear-gradient(135deg, rgba(24, 24, 27, 0.94), rgba(15, 12, 28, 0.94));
+  --backdrop-overlay: rgba(9, 9, 11, 0.65);
+  --accent-text: rgb(196, 181, 253);
+  --accent-soft: rgba(139, 92, 246, 0.12);
+  --hover-bg: rgba(255, 255, 255, 0.07);
+  --panel-shadow: rgba(0, 0, 0, 0.3);
+  --player-bg: linear-gradient(145deg, rgba(24, 24, 27, 0.96), rgba(9, 9, 11, 0.98));
+  --player-border: rgba(255, 255, 255, 0.07);
+  --player-text: rgba(255, 255, 255, 0.9);
+  --player-muted: rgba(255, 255, 255, 0.42);
+  --player-subtle: rgba(255, 255, 255, 0.25);
+  --player-control-hover: rgba(255, 255, 255, 0.08);
+  --player-track: rgba(255, 255, 255, 0.1);
+  --player-thumb: rgb(255, 255, 255);
+}
+
+html[data-theme="light"] {
+  --page-text: rgb(24, 24, 27);
+  --text-muted: rgba(39, 39, 42, 0.7);
+  --text-subtle: rgba(63, 63, 70, 0.56);
+  --panel-bg: rgba(255, 255, 255, 0.78);
+  --panel-border: rgba(255, 255, 255, 0.7);
+  --inner-bg: rgba(255, 255, 255, 0.58);
+  --inner-border: rgba(109, 92, 151, 0.12);
+  --hero-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(242, 238, 255, 0.82));
+  --backdrop-overlay: transparent;
+  --accent-text: rgb(109, 40, 217);
+  --accent-soft: rgba(124, 58, 237, 0.1);
+  --hover-bg: rgba(124, 58, 237, 0.08);
+  --panel-shadow: rgba(56, 38, 80, 0.1);
+  --player-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(246, 243, 255, 0.96));
+  --player-border: rgba(109, 92, 151, 0.16);
+  --player-text: rgba(24, 24, 27, 0.92);
+  --player-muted: rgba(39, 39, 42, 0.58);
+  --player-subtle: rgba(63, 63, 70, 0.4);
+  --player-control-hover: rgba(124, 58, 237, 0.09);
+  --player-track: rgba(63, 63, 70, 0.13);
+  --player-thumb: rgb(109, 40, 217);
+}
+
 html,
 body {
   scroll-behavior: smooth;
   font-family: "pixel", sans-serif;
-  color: white;
+  color: var(--page-text);
+}
+
+body {
+  background: rgb(9, 9, 11);
+  transition: background-color 300ms ease, color 300ms ease;
+}
+
+html[data-theme="light"] body {
+  background: rgb(244, 242, 255);
+}
+
+.theme-panel {
+  border-color: var(--panel-border);
+  background: var(--panel-bg);
+  box-shadow: 0 24px 60px var(--panel-shadow);
+  color: var(--page-text);
+}
+
+.theme-hero {
+  background: var(--hero-bg);
+}
+
+.theme-card {
+  border-color: var(--inner-border);
+  background: var(--inner-bg);
+}
+
+.theme-contact:hover {
+  border-color: rgba(139, 92, 246, 0.34);
+  background: var(--accent-soft);
+}
+
+.theme-text-primary {
+  color: var(--page-text);
+}
+
+.theme-text-muted {
+  color: var(--text-muted);
+}
+
+.theme-text-subtle {
+  color: var(--text-subtle);
+}
+
+.theme-accent-text {
+  color: var(--accent-text);
+}
+
+.theme-accent-soft {
+  background: var(--accent-soft);
+}
+
+.theme-hover:hover {
+  background: var(--hover-bg);
+  color: var(--accent-text);
+}
+
+.theme-backdrop {
+  background: var(--backdrop-overlay);
+  transition: background-color 300ms ease;
+}
+
+.player-surface {
+  background: var(--player-bg);
+  border-color: var(--player-border);
+  color: var(--player-text);
+}
+
+.player-float-button {
+  border-color: var(--player-border);
+  background: var(--player-bg);
+  color: var(--player-muted);
+}
+
+.player-text {
+  color: var(--player-text);
+}
+
+.player-muted {
+  color: var(--player-muted);
+}
+
+.player-subtle {
+  color: var(--player-subtle);
+}
+
+.player-control:hover {
+  background: var(--player-control-hover);
+  color: var(--player-text);
+}
+
+.player-track {
+  background: var(--player-track);
+}
+
+.player-thumb::-webkit-slider-thumb {
+  background: var(--player-thumb);
+}
+
+.player-thumb::-moz-range-thumb {
+  background: var(--player-thumb);
 }
 
 img {

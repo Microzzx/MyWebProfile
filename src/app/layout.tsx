@@ -1,15 +1,18 @@
 import "../styles/globals.css";
-import { LayoutProps } from "@/types/types";
-import MainLayout from "@/components/layout/MainLayout";
-import { ReactNode } from "react";
+import type { PropsWithChildren } from "react";
+import AppShell from "@/components/layout/AppShell";
 
-export const metadata = { title: "My Profile App" };
+export const metadata = {
+  title: "Janekit Prakittawornkul | Web Developer",
+  description:
+    "Portfolio of Janekit Prakittawornkul, a backend and web developer.",
+};
 
-export default function RootLayout({ children }: LayoutProps) {
+export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html>
       <body>
-        <MainLayout>{children}</MainLayout>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

@@ -1,18 +1,18 @@
 "use client";
-import React, { ChangeEvent } from "react";
+import type { ChangeEvent } from "react";
 import {
   BsFillVolumeUpFill,
   BsVolumeDownFill,
   BsFillVolumeMuteFill,
 } from "react-icons/bs";
-import { usePlayerStore } from "@/feature/player/store";
+import { usePlayerStore } from "../player-store";
 
 type VolumeProps = {
   min?: number;
   max?: number;
 };
 
-const Volume: React.FC<VolumeProps> = ({ min = 0, max = 1 }) => {
+const VolumeControl = ({ min = 0, max = 1 }: VolumeProps) => {
   const { volume, setVolume } = usePlayerStore();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -37,7 +37,7 @@ const Volume: React.FC<VolumeProps> = ({ min = 0, max = 1 }) => {
       <button
         onClick={toggleMute}
         aria-label={volume === 0 ? "Unmute" : "Mute"}
-        className="text-white/35 hover:text-white/80 transition-colors cursor-pointer p-1"
+        className="player-muted player-control rounded-lg transition-colors cursor-pointer p-1"
       >
         <VolumeIcon size={17} />
       </button>
@@ -45,7 +45,7 @@ const Volume: React.FC<VolumeProps> = ({ min = 0, max = 1 }) => {
       {/* Slider with violet fill */}
       <div className="relative flex items-center group" style={{ width: 64, height: 16 }}>
         <div className="absolute inset-y-0 flex items-center w-full pointer-events-none">
-          <div className="w-full h-[3px] rounded-full bg-white/10 overflow-hidden">
+          <div className="player-track w-full h-[3px] rounded-full overflow-hidden">
             <div
               className="h-full bg-violet-400 rounded-full"
               style={{ width: `${percent}%` }}
@@ -67,14 +67,13 @@ const Volume: React.FC<VolumeProps> = ({ min = 0, max = 1 }) => {
             [&::-webkit-slider-thumb]:w-3
             [&::-webkit-slider-thumb]:h-3
             [&::-webkit-slider-thumb]:rounded-full
-            [&::-webkit-slider-thumb]:bg-white
+            player-thumb
             [&::-webkit-slider-thumb]:opacity-0
             group-hover:[&::-webkit-slider-thumb]:opacity-100
             [&::-webkit-slider-thumb]:transition-opacity
             [&::-moz-range-thumb]:w-3
             [&::-moz-range-thumb]:h-3
             [&::-moz-range-thumb]:rounded-full
-            [&::-moz-range-thumb]:bg-white
             [&::-moz-range-thumb]:border-0
             [&::-moz-range-thumb]:opacity-0
             group-hover:[&::-moz-range-thumb]:opacity-100
@@ -85,4 +84,4 @@ const Volume: React.FC<VolumeProps> = ({ min = 0, max = 1 }) => {
   );
 };
 
-export default Volume;
+export default VolumeControl;

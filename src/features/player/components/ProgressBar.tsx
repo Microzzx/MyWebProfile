@@ -1,10 +1,9 @@
 "use client";
-import React, { ChangeEvent } from "react";
-import { usePlayerStore } from "@/feature/player/store";
+import type { ChangeEvent, MouseEvent, TouchEvent } from "react";
+import { usePlayerStore } from "../player-store";
 
 type Props = {
   width?: number;
-  height?: number;
   className?: string;
 };
 
@@ -14,8 +13,8 @@ const formatTime = (time: number): string => {
   return `${min}:${sec.toString().padStart(2, "0")}`;
 };
 
-const Progress = ({ width, height, className }: Props) => {
-  const { currentTime, duration, isSeeking, setCurrentTime, setSeeking } =
+const ProgressBar = ({ width, className }: Props) => {
+  const { currentTime, duration, setCurrentTime, setSeeking } =
     usePlayerStore();
 
   const percent = duration > 0 ? (currentTime / duration) * 100 : 0;
@@ -26,14 +25,14 @@ const Progress = ({ width, height, className }: Props) => {
 
   const handleMouseDown = () => setSeeking(true);
 
-  const handleMouseUp = (e: React.MouseEvent<HTMLInputElement>) => {
+  const handleMouseUp = (e: MouseEvent<HTMLInputElement>) => {
     const audio = document.querySelector("audio") as HTMLAudioElement | null;
     if (audio) audio.currentTime = Number(e.currentTarget.value);
     setSeeking(false);
   };
 
   // Touch support for mobile
-  const handleTouchEnd = (e: React.TouchEvent<HTMLInputElement>) => {
+  const handleTouchEnd = (e: TouchEvent<HTMLInputElement>) => {
     const audio = document.querySelector("audio") as HTMLAudioElement | null;
     if (audio) audio.currentTime = Number(e.currentTarget.value);
     setSeeking(false);
@@ -45,7 +44,7 @@ const Progress = ({ width, height, className }: Props) => {
       className={`flex items-center gap-2.5 ${className ?? ""}`}
     >
       {/* Elapsed */}
-      <span className="font-mono text-[11px] text-white/40 tabular-nums w-8 text-right flex-shrink-0">
+      <span className="player-muted font-mono text-[11px] tabular-nums w-8 text-right flex-shrink-0">
         {formatTime(currentTime)}
       </span>
 
@@ -53,7 +52,7 @@ const Progress = ({ width, height, className }: Props) => {
       <div className="relative flex-1 flex items-center group" style={{ height: 16 }}>
         {/* Visual filled track */}
         <div className="absolute inset-y-0 flex items-center w-full pointer-events-none">
-          <div className="w-full h-[3px] rounded-full bg-white/10 overflow-hidden">
+          <div className="player-track w-full h-[3px] rounded-full overflow-hidden">
             <div
               className="h-full bg-violet-400 rounded-full transition-none"
               style={{ width: `${percent}%` }}
@@ -79,7 +78,7 @@ const Progress = ({ width, height, className }: Props) => {
             [&::-webkit-slider-thumb]:w-3
             [&::-webkit-slider-thumb]:h-3
             [&::-webkit-slider-thumb]:rounded-full
-            [&::-webkit-slider-thumb]:bg-white
+            player-thumb
             [&::-webkit-slider-thumb]:shadow-md
             [&::-webkit-slider-thumb]:opacity-0
             group-hover:[&::-webkit-slider-thumb]:opacity-100
@@ -87,7 +86,6 @@ const Progress = ({ width, height, className }: Props) => {
             [&::-moz-range-thumb]:w-3
             [&::-moz-range-thumb]:h-3
             [&::-moz-range-thumb]:rounded-full
-            [&::-moz-range-thumb]:bg-white
             [&::-moz-range-thumb]:border-0
             [&::-moz-range-thumb]:opacity-0
             group-hover:[&::-moz-range-thumb]:opacity-100
@@ -97,11 +95,11 @@ const Progress = ({ width, height, className }: Props) => {
       </div>
 
       {/* Duration */}
-      <span className="font-mono text-[11px] text-white/25 tabular-nums w-8 flex-shrink-0">
+      <span className="player-subtle font-mono text-[11px] tabular-nums w-8 flex-shrink-0">
         {formatTime(duration)}
       </span>
     </div>
   );
 };
 
-export default Progress;
+export default ProgressBar;

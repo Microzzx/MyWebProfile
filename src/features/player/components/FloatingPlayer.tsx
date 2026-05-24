@@ -1,19 +1,25 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
-import { usePlayerStore } from "@/feature/player/store";
-import Track from "./SongbarComponents/Track";
-import Progress from "./SongbarComponents/Progress";
-import Control from "./SongbarComponents/Control";
-import Volume from "./SongbarComponents/Volume";
-import Player from "./SongbarComponents/Player";
-import data from "../../../public/data/myChart.json";
+import type {
+  HTMLAttributes,
+  MouseEvent as ReactMouseEvent,
+  ReactNode,
+  TouchEvent as ReactTouchEvent,
+} from "react";
+import { useEffect, useRef, useState } from "react";
+import { usePlayerStore } from "../player-store";
+import { getTrack, TRACK_CATALOG } from "../track-catalog";
+import AudioPlayer from "./AudioPlayer";
+import PlaybackControls from "./PlaybackControls";
+import ProgressBar from "./ProgressBar";
+import TrackArtwork from "./TrackArtwork";
+import VolumeControl from "./VolumeControl";
 import {
   MdShuffle,
   MdRepeat,
   MdRemove,
 } from "react-icons/md";
 
-type Props = React.HTMLAttributes<HTMLElement>;
+type Props = HTMLAttributes<HTMLElement>;
 type DragPosition = { x: number; y: number };
 
 /* ─────────────────────────────────────────────────────────
@@ -55,7 +61,7 @@ const ModeBtn = ({
   on: boolean;
   onClick: () => void;
   label: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) => (
   <button
     onClick={onClick}
@@ -66,7 +72,7 @@ const ModeBtn = ({
       ${
         on
           ? "text-violet-400 hover:text-violet-300"
-          : "text-white/25 hover:text-white/60"
+          : "player-subtle player-control"
       }
     `}
   >
@@ -80,23 +86,21 @@ const ModeBtn = ({
 /* ─────────────────────────────────────────────────────────
    SongBar  —  desktop panel + mobile bottom bar
 ───────────────────────────────────────────────────────── */
-const SongBar = ({ className, ...rest }: Props) => {
+const FloatingPlayer = ({ className, ...rest }: Props) => {
   const playerRef = useRef<HTMLElement | null>(null);
   const dragOffsetRef = useRef<DragPosition>({ x: 0, y: 0 });
   const dragStartRef = useRef<DragPosition>({ x: 0, y: 0 });
   const suppressToggleClickRef = useRef(false);
   const cleanupDragListenersRef = useRef<(() => void) | null>(null);
   const {
-    songList,
-    activeSong,
+    activeTrack,
     isPlaying,
-    toggle,
+    isExpanded,
     currentTime,
     duration,
-    setSong,
-    setActive,
+    setActiveTrack,
     setPlaying,
-    setToggle,
+    setExpanded,
     setCurrentTime,
   } = usePlayerStore();
 
@@ -105,36 +109,29 @@ const SongBar = ({ className, ...rest }: Props) => {
   const [dragPosition, setDragPosition] = useState<DragPosition | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  /* Load playlist once */
-  useEffect(() => {
-    setSong(data.tracks);
-  }, []);
-
   /* Auto-play on track change */
   useEffect(() => {
-    if (songList) setPlaying(true);
-  }, [activeSong]);
+    setPlaying(true);
+  }, [activeTrack, setPlaying]);
 
   const handlePlayPause = () => setPlaying(!isPlaying);
 
   const handleNextSong = () => {
-    if (!songList) return;
     setPlaying(false);
     if (shuffle) {
       let next: number;
       do {
-        next = Math.floor(Math.random() * songList.length);
-      } while (next === activeSong && songList.length > 1);
-      setActive(next);
+        next = Math.floor(Math.random() * TRACK_CATALOG.length);
+      } while (next === activeTrack && TRACK_CATALOG.length > 1);
+      setActiveTrack(next);
     } else {
-      setActive((activeSong + 1) % songList.length);
+      setActiveTrack((activeTrack + 1) % TRACK_CATALOG.length);
     }
   };
 
   const handlePrevSong = () => {
-    if (!songList) return;
     setPlaying(false);
-    setActive(activeSong === 0 ? songList.length - 1 : activeSong - 1);
+    setActiveTrack(activeTrack === 0 ? TRACK_CATALOG.length - 1 : activeTrack - 1);
   };
 
   /* Repeat: seek audio back to 0 and play directly.
@@ -241,7 +238,7 @@ const SongBar = ({ className, ...rest }: Props) => {
     setIsDragging(false);
   };
 
-  const handleMouseDragStart = (event: React.MouseEvent<HTMLElement>) => {
+  const handleMouseDragStart = (event: ReactMouseEvent<HTMLElement>) => {
     if (!startDrag(event.clientX, event.clientY, event.target, event.button)) {
       return;
     }
@@ -249,18 +246,18 @@ const SongBar = ({ className, ...rest }: Props) => {
     event.preventDefault();
   };
 
-  const handleTouchDragStart = (event: React.TouchEvent<HTMLElement>) => {
+  const handleTouchDragStart = (event: ReactTouchEvent<HTMLElement>) => {
     const touch = event.touches[0];
     if (!touch) return;
     startDrag(touch.clientX, touch.clientY, event.target);
   };
 
-  const handleHandleMouseDown = (event: React.MouseEvent<HTMLElement>) => {
+  const handleHandleMouseDown = (event: ReactMouseEvent<HTMLElement>) => {
     event.stopPropagation();
     handleMouseDragStart(event);
   };
 
-  const handleHandleTouchStart = (event: React.TouchEvent<HTMLElement>) => {
+  const handleHandleTouchStart = (event: ReactTouchEvent<HTMLElement>) => {
     event.stopPropagation();
     handleTouchDragStart(event);
   };
@@ -287,16 +284,16 @@ const SongBar = ({ className, ...rest }: Props) => {
       });
     }
 
-    setToggle(!toggle);
+    setExpanded(!isExpanded);
   };
 
-  const currentTrack = songList?.[activeSong];
+  const currentTrack = getTrack(activeTrack);
   const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
   const isFreePositioned = dragPosition !== null;
 
   return (
     <>
-      <Player onEnded={handleEnded} />
+      <AudioPlayer onEnded={handleEnded} />
 
       {/* ══════════════════════════════════════════════════
           DESKTOP — slide-in panel  (lg and above)
@@ -325,39 +322,38 @@ const SongBar = ({ className, ...rest }: Props) => {
         aria-label="Music player"
         {...rest}
       >
-        {!toggle && (
-          <button
-            data-songbar-drag-handle
-            onMouseDown={handleHandleMouseDown}
-            onTouchStart={handleHandleTouchStart}
-            onClick={handleTogglePlayer}
-            aria-label="Show player"
-            className="
-              absolute right-5 top-5 z-10 flex h-8 w-8 items-center justify-center rounded-lg
-              bg-zinc-950/90 hover:bg-zinc-900/95 backdrop-blur-xl
-              border border-white/[0.07]
-              text-white/35 hover:text-white/75
-              shadow-2xl shadow-black/45
-              transition-all duration-300 ease-in-out cursor-grab active:cursor-grabbing
-            "
-          >
-            <MdRemove size={18} />
-          </button>
-        )}
+        <button
+          data-songbar-drag-handle
+          onMouseDown={handleHandleMouseDown}
+          onTouchStart={handleHandleTouchStart}
+          onClick={handleTogglePlayer}
+          aria-label={isExpanded ? "Hide player" : "Show player"}
+          className={`
+            absolute right-[36px] top-[27px] z-10 flex h-8 w-8 items-center justify-center rounded-lg
+            transition-all duration-300 ease-in-out cursor-grab active:cursor-grabbing
+            ${
+              isExpanded
+                ? "player-subtle player-control"
+                : "player-float-button border shadow-2xl shadow-black/20 backdrop-blur-xl player-control"
+            }
+          `}
+        >
+          <MdRemove size={18} />
+        </button>
 
         {/* Card */}
         <div
           className={`
             flex min-w-0 flex-col
-            bg-[linear-gradient(145deg,rgba(24,24,27,0.96),rgba(9,9,11,0.98))]
+            player-surface
             backdrop-blur-xl
             rounded-2xl overflow-hidden
             shadow-2xl shadow-black/50
-            ring-1 ring-white/[0.04]
+            ring-1 ring-[var(--player-border)]
             transition-[opacity,border-color,transform] duration-300 ease-in-out
             ${
-              toggle
-                ? "w-[436px] translate-x-0 opacity-100 border border-white/[0.07]"
+              isExpanded
+                ? "w-[436px] translate-x-0 opacity-100 border"
                 : "w-[436px] scale-95 opacity-0 border border-transparent pointer-events-none"
             }
           `}
@@ -368,44 +364,23 @@ const SongBar = ({ className, ...rest }: Props) => {
           <div className="flex flex-col gap-4 px-5 pt-4 pb-5">
             {/* ── Row 1: Album art | info | waveform | like ── */}
             <div className="flex items-center gap-3">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden ring-1 ring-white/[0.12]">
-                <Track width={48} height={48} />
+              <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden ring-1 ring-[var(--player-border)]">
+                <TrackArtwork width={48} height={48} />
               </div>
 
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white/90 truncate leading-tight tracking-tight">
+                <p className="player-text text-sm font-semibold truncate leading-tight tracking-tight">
                   {currentTrack?.title ?? "—"}
                 </p>
-                {/* <p className="text-[11px] text-white/35 truncate mt-0.5">
-                  {currentTrack?.artist ?? "—"}
-                  {songList && (
-                    <span className="ml-2 text-white/18 tabular-nums">
-                      {activeSong + 1}&nbsp;/&nbsp;{songList.length}
-                    </span>
-                  )}
-                </p> */}
               </div>
 
               <Waveform active={isPlaying} />
 
-              <button
-                data-songbar-drag-handle
-                onMouseDown={handleHandleMouseDown}
-                onTouchStart={handleHandleTouchStart}
-                onClick={handleTogglePlayer}
-                aria-label="Hide player"
-                className="
-                  flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg
-                  text-white/25 hover:text-white/75 hover:bg-white/8
-                  transition-all cursor-grab active:cursor-grabbing
-                "
-              >
-                <MdRemove size={18} />
-              </button>
+              <div className="h-8 w-12 flex-shrink-0" aria-hidden />
             </div>
 
             {/* ── Row 2: Progress bar ── */}
-            <Progress className="w-full" />
+            <ProgressBar className="w-full" />
 
             {/* ── Row 3: Shuffle | Controls | Volume | Repeat ── */}
             <div className="flex items-center justify-between">
@@ -417,13 +392,13 @@ const SongBar = ({ className, ...rest }: Props) => {
                 <MdShuffle size={18} />
               </ModeBtn>
 
-              <Control
+              <PlaybackControls
                 handlePlayPause={handlePlayPause}
                 handleNextSong={handleNextSong}
                 handlePrevSong={handlePrevSong}
               />
 
-              <Volume />
+              <VolumeControl />
 
               <ModeBtn
                 on={repeat}
@@ -442,16 +417,16 @@ const SongBar = ({ className, ...rest }: Props) => {
       ══════════════════════════════════════════════════ */}
       <div
         className={`
-          ${toggle ? "flex" : "hidden"} lg:hidden flex-col
+          ${isExpanded ? "flex" : "hidden"} lg:hidden flex-col
           fixed bottom-0 left-0 right-0 z-50
-          bg-zinc-900/98 backdrop-blur-xl
-          border-t border-white/[0.07]
+          player-surface backdrop-blur-xl
+          border-t
           pb-[env(safe-area-inset-bottom)]
         `}
         aria-label="Music player"
       >
         {/* Thin seek-progress line */}
-        <div className="h-[2px] w-full bg-white/[0.06]">
+        <div className="player-track h-[2px] w-full">
           <div
             className="h-full bg-violet-500 transition-none rounded-full"
             style={{ width: `${progressPct}%` }}
@@ -460,18 +435,15 @@ const SongBar = ({ className, ...rest }: Props) => {
 
         <div className="flex items-center gap-3 px-4 py-3">
           {/* Album art */}
-          <div className="flex-shrink-0 w-11 h-11 rounded-full overflow-hidden ring-1 ring-white/10">
-            <Track width={44} height={44} />
+          <div className="flex-shrink-0 w-11 h-11 rounded-full overflow-hidden ring-1 ring-[var(--player-border)]">
+            <TrackArtwork width={44} height={44} />
           </div>
 
           {/* Song info */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white/90 truncate leading-tight">
+            <p className="player-text text-sm font-semibold truncate leading-tight">
               {currentTrack?.title ?? "—"}
             </p>
-            {/* <p className="text-[11px] text-white/35 truncate">
-              {currentTrack?.artist ?? "—"}
-            </p> */}
           </div>
 
           <button
@@ -479,29 +451,29 @@ const SongBar = ({ className, ...rest }: Props) => {
             aria-label="Hide player"
             className="
               p-2 transition-all cursor-pointer active:scale-90 flex-shrink-0
-              text-white/25 hover:text-white/75
+              player-subtle player-control
             "
           >
             <MdRemove size={22} />
           </button>
 
           {/* Play + Next only (prev hidden on mobile via Control's hidden lg:flex) */}
-          <Control
+          <PlaybackControls
             handlePlayPause={handlePlayPause}
             handleNextSong={handleNextSong}
             handlePrevSong={handlePrevSong}
           />
         </div>
       </div>
-      {!toggle && (
+      {!isExpanded && (
         <button
           onClick={handleTogglePlayer}
           aria-label="Show player"
           className="
             fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center
-            rounded-xl border border-white/[0.07] bg-zinc-950/90 backdrop-blur-xl
-            text-white/35 shadow-2xl shadow-black/45 transition-all
-            hover:bg-zinc-900/95 hover:text-white/75 active:scale-95 lg:hidden
+            player-float-button rounded-xl border backdrop-blur-xl
+            shadow-2xl shadow-black/20 transition-all player-control
+            active:scale-95 lg:hidden
           "
         >
           <MdRemove size={22} />
@@ -511,4 +483,4 @@ const SongBar = ({ className, ...rest }: Props) => {
   );
 };
 
-export default SongBar;
+export default FloatingPlayer;
