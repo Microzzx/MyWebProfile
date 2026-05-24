@@ -14,8 +14,9 @@ const formatTime = (time: number): string => {
 };
 
 const ProgressBar = ({ width, className }: Props) => {
-  const { currentTime, duration, setCurrentTime, setSeeking } =
+  const { tracks, activeTrack, currentTime, duration, setCurrentTime, setSeeking, requestSeek } =
     usePlayerStore();
+  const isLocalTrack = tracks[activeTrack]?.source.provider === "local";
 
   const percent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
@@ -25,17 +26,24 @@ const ProgressBar = ({ width, className }: Props) => {
 
   const handleMouseDown = () => setSeeking(true);
 
-  const handleMouseUp = (e: MouseEvent<HTMLInputElement>) => {
-    const audio = document.querySelector("audio") as HTMLAudioElement | null;
-    if (audio) audio.currentTime = Number(e.currentTarget.value);
+  const seekTo = (time: number) => {
+    if (isLocalTrack) {
+      const audio = document.querySelector("audio") as HTMLAudioElement | null;
+      if (audio) audio.currentTime = time;
+    } else {
+      requestSeek(time);
+    }
+
     setSeeking(false);
+  };
+
+  const handleMouseUp = (e: MouseEvent<HTMLInputElement>) => {
+    seekTo(Number(e.currentTarget.value));
   };
 
   // Touch support for mobile
   const handleTouchEnd = (e: TouchEvent<HTMLInputElement>) => {
-    const audio = document.querySelector("audio") as HTMLAudioElement | null;
-    if (audio) audio.currentTime = Number(e.currentTarget.value);
-    setSeeking(false);
+    seekTo(Number(e.currentTarget.value));
   };
 
   return (

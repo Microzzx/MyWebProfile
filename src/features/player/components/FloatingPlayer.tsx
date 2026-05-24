@@ -5,22 +5,31 @@ import type {
   ReactNode,
   TouchEvent as ReactTouchEvent,
 } from "react";
-import { useEffect, useRef, useState } from "react";
-import { usePlayerStore } from "../player-store";
-import { getTrack, TRACK_CATALOG } from "../track-catalog";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  PLAYER_SESSION_STORAGE_KEY,
+  type PersistedPlayerSession,
+  usePlayerStore,
+} from "../player-store";
+import type { Track } from "../track-catalog";
 import AudioPlayer from "./AudioPlayer";
 import PlaybackControls from "./PlaybackControls";
 import ProgressBar from "./ProgressBar";
 import TrackArtwork from "./TrackArtwork";
+import TrackList from "./TrackList";
 import VolumeControl from "./VolumeControl";
+import YouTubeImportForm from "./YouTubeImportForm";
+import YouTubePlayer, { YOUTUBE_PLAYBACK_EVENT } from "./YouTubePlayer";
 import {
   MdShuffle,
   MdRepeat,
   MdRemove,
+  MdQueueMusic,
 } from "react-icons/md";
 
 type Props = HTMLAttributes<HTMLElement>;
 type DragPosition = { x: number; y: number };
+type DragBounds = DragPosition & { width: number; height: number };
 
 /* ─────────────────────────────────────────────────────────
    Waveform  —  5 bars that animate while playing
@@ -88,65 +97,187 @@ const ModeBtn = ({
 ───────────────────────────────────────────────────────── */
 const FloatingPlayer = ({ className, ...rest }: Props) => {
   const playerRef = useRef<HTMLElement | null>(null);
+  const desktopToggleRef = useRef<HTMLButtonElement | null>(null);
   const dragOffsetRef = useRef<DragPosition>({ x: 0, y: 0 });
+  const toggleOffsetRef = useRef<DragBounds>({ x: 0, y: 0, width: 44, height: 44 });
   const dragStartRef = useRef<DragPosition>({ x: 0, y: 0 });
+  const expandToggleAnchorRef = useRef<DragPosition | null>(null);
   const suppressToggleClickRef = useRef(false);
   const cleanupDragListenersRef = useRef<(() => void) | null>(null);
   const {
+    tracks,
     activeTrack,
     isPlaying,
     isExpanded,
+    volume,
     currentTime,
     duration,
+    addTrack,
+    removeImportedTrack,
     setActiveTrack,
     setPlaying,
     setExpanded,
     setCurrentTime,
+    setDuration,
+    requestSeek,
+    clearSeekRequest,
+    progressByTrackId,
+    hasRestoredSession,
+    restoreSession,
   } = usePlayerStore();
 
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState(false);
+  const [showTrackList, setShowTrackList] = useState(false);
+  const [isYouTubeReady, setYouTubeReady] = useState(false);
+  const [playerViewport, setPlayerViewport] = useState<"desktop" | "mobile" | null>(null);
   const [dragPosition, setDragPosition] = useState<DragPosition | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const currentTrack = tracks[activeTrack];
+  const isYouTubeLoading =
+    currentTrack?.source.provider === "youtube" && !isYouTubeReady;
 
-  /* Auto-play on track change */
   useEffect(() => {
-    setPlaying(true);
-  }, [activeTrack, setPlaying]);
+    let storedSession: PersistedPlayerSession | null = null;
 
-  const handlePlayPause = () => setPlaying(!isPlaying);
+    try {
+      const storedValue = window.localStorage.getItem(PLAYER_SESSION_STORAGE_KEY);
+      storedSession = storedValue ? (JSON.parse(storedValue) as PersistedPlayerSession) : null;
+    } catch {
+      window.localStorage.removeItem(PLAYER_SESSION_STORAGE_KEY);
+    }
+
+    restoreSession(storedSession);
+  }, [restoreSession]);
+
+  useEffect(() => {
+    const desktopQuery = window.matchMedia("(min-width: 1024px)");
+    const updateViewport = () => {
+      setPlayerViewport(desktopQuery.matches ? "desktop" : "mobile");
+    };
+
+    updateViewport();
+    desktopQuery.addEventListener("change", updateViewport);
+
+    return () => desktopQuery.removeEventListener("change", updateViewport);
+  }, []);
+
+  useEffect(() => {
+    if (!hasRestoredSession) return;
+
+    const session = {
+      youtubeTracks: tracks.filter((track) => track.source.provider === "youtube"),
+      activeTrackId: currentTrack?.id,
+      progressByTrackId,
+      volume,
+    };
+
+    window.localStorage.setItem(PLAYER_SESSION_STORAGE_KEY, JSON.stringify(session));
+  }, [currentTrack?.id, hasRestoredSession, progressByTrackId, tracks, volume]);
+
+  const handlePlayPause = () => {
+    const shouldPlay = !isPlaying;
+
+    if (currentTrack?.source.provider === "youtube") {
+      window.dispatchEvent(
+        new CustomEvent(YOUTUBE_PLAYBACK_EVENT, {
+          detail: shouldPlay ? "play" : "pause",
+        })
+      );
+      return;
+    }
+
+    setPlaying(shouldPlay);
+  };
 
   const handleNextSong = () => {
-    setPlaying(false);
+    const continuePlaying = isPlaying;
+    let nextTrack: number;
+
     if (shuffle) {
-      let next: number;
       do {
-        next = Math.floor(Math.random() * TRACK_CATALOG.length);
-      } while (next === activeTrack && TRACK_CATALOG.length > 1);
-      setActiveTrack(next);
+        nextTrack = Math.floor(Math.random() * tracks.length);
+      } while (nextTrack === activeTrack && tracks.length > 1);
     } else {
-      setActiveTrack((activeTrack + 1) % TRACK_CATALOG.length);
+      nextTrack = (activeTrack + 1) % tracks.length;
     }
+
+    setActiveTrack(nextTrack);
+    setPlaying(continuePlaying);
   };
 
   const handlePrevSong = () => {
+    const continuePlaying = isPlaying;
+    const previousTrack = activeTrack === 0 ? tracks.length - 1 : activeTrack - 1;
+    setActiveTrack(previousTrack);
+    setPlaying(continuePlaying);
+  };
+
+  const handleSelectTrack = (index: number) => {
+    if (index === activeTrack) {
+      if (currentTrack?.source.provider === "youtube") {
+        window.dispatchEvent(
+          new CustomEvent(YOUTUBE_PLAYBACK_EVENT, { detail: "play" })
+        );
+      } else {
+        setPlaying(true);
+      }
+
+      return;
+    }
+
+    setDuration(0);
+    clearSeekRequest();
     setPlaying(false);
-    setActiveTrack(activeTrack === 0 ? TRACK_CATALOG.length - 1 : activeTrack - 1);
+    setActiveTrack(index);
+
+    if (tracks[index]?.source.provider === "local") {
+      setPlaying(true);
+    }
+  };
+
+  const handleImportedTrack = (track: Track) => {
+    const existingIndex = tracks.findIndex((existingTrack) => existingTrack.id === track.id);
+    const selectedIndex = existingIndex >= 0 ? existingIndex : tracks.length;
+
+    if (existingIndex < 0) {
+      addTrack(track);
+    }
+
+    handleSelectTrack(selectedIndex);
+  };
+
+  const handleRemoveTrack = (trackId: string) => {
+    removeImportedTrack(trackId);
   };
 
   /* Repeat: seek audio back to 0 and play directly.
      Cannot just setPlaying(true) — state didn't change so
      Player's useEffect won't re-trigger audio.play(). */
   const handleEnded = () => {
+    setCurrentTime(0);
+
     if (repeat) {
-      const audio = document.querySelector("audio") as HTMLAudioElement | null;
-      if (audio) {
-        audio.currentTime = 0;
-        audio.play().catch(() => {});
+      const provider = tracks[activeTrack]?.source.provider;
+
+      if (provider === "local") {
+        const audio = document.querySelector("audio") as HTMLAudioElement | null;
+        if (audio) {
+          audio.currentTime = 0;
+          audio.play().catch(() => {});
+        }
+      } else if (provider === "youtube") {
+        requestSeek(0);
+        setPlaying(false);
+        window.setTimeout(() => setPlaying(true), 0);
+      } else {
+        handleNextSong();
+        return;
       }
-      setCurrentTime(0);
+
       return;
     }
+
     handleNextSong();
   };
 
@@ -171,6 +302,18 @@ const FloatingPlayer = ({ className, ...rest }: Props) => {
     if (button > 1 || !canStartDrag(target)) return false;
     const rect = playerRef.current?.getBoundingClientRect();
     if (!rect) return false;
+    const toggleRect = isExpanded
+      ? desktopToggleRef.current?.getBoundingClientRect()
+      : rect;
+
+    if (toggleRect) {
+      toggleOffsetRef.current = {
+        x: toggleRect.left - rect.left,
+        y: toggleRect.top - rect.top,
+        width: toggleRect.width,
+        height: toggleRect.height,
+      };
+    }
 
     dragOffsetRef.current = {
       x: clientX - rect.left,
@@ -211,26 +354,32 @@ const FloatingPlayer = ({ className, ...rest }: Props) => {
   const moveDrag = (clientX: number, clientY: number) => {
     const rect = playerRef.current?.getBoundingClientRect();
     if (!rect) return;
+    const toggleOffset = toggleOffsetRef.current;
 
     const moved =
       Math.abs(clientX - dragStartRef.current.x) +
       Math.abs(clientY - dragStartRef.current.y);
 
-    if (moved > 5) {
+    if (moved > 3) {
       suppressToggleClickRef.current = true;
     }
 
+    const nextX = clientX - dragOffsetRef.current.x;
+    const nextY = clientY - dragOffsetRef.current.y;
+    const toggleX = clamp(
+      nextX + toggleOffset.x,
+      0,
+      window.innerWidth - toggleOffset.width
+    );
+    const toggleY = clamp(
+      nextY + toggleOffset.y,
+      0,
+      window.innerHeight - toggleOffset.height
+    );
+
     setDragPosition({
-      x: clamp(
-        clientX - dragOffsetRef.current.x,
-        0,
-        window.innerWidth - rect.width
-      ),
-      y: clamp(
-        clientY - dragOffsetRef.current.y,
-        0,
-        window.innerHeight - rect.height
-      ),
+      x: toggleX - toggleOffset.x,
+      y: toggleY - toggleOffset.y,
     });
   };
 
@@ -269,25 +418,52 @@ const FloatingPlayer = ({ className, ...rest }: Props) => {
     };
   }, []);
 
+  useLayoutEffect(() => {
+    const anchor = expandToggleAnchorRef.current;
+    const toggleRect = desktopToggleRef.current?.getBoundingClientRect();
+    if (!isExpanded || !anchor || !toggleRect) return;
+
+    setDragPosition((position) =>
+      position
+        ? {
+            x: position.x + anchor.x - toggleRect.left,
+            y: position.y + anchor.y - toggleRect.top,
+          }
+        : position
+    );
+    expandToggleAnchorRef.current = null;
+  }, [isExpanded]);
+
   const handleTogglePlayer = () => {
     if (suppressToggleClickRef.current) {
       suppressToggleClickRef.current = false;
       return;
     }
 
-    const rect = playerRef.current?.getBoundingClientRect();
+    const rect = (isExpanded ? desktopToggleRef.current : playerRef.current)?.getBoundingClientRect();
 
     if (rect) {
-      setDragPosition({
-        x: clamp(rect.left, 0, window.innerWidth - rect.width),
-        y: clamp(rect.top, 0, window.innerHeight - rect.height),
-      });
+      const togglePosition = { x: rect.left, y: rect.top };
+
+      setDragPosition(togglePosition);
+
+      if (!isExpanded) {
+        expandToggleAnchorRef.current = togglePosition;
+      }
+    }
+
+    if (currentTrack?.source.provider === "youtube") {
+      if (isExpanded) {
+        setPlaying(false);
+      } else {
+        const savedTime = usePlayerStore.getState().progressByTrackId[currentTrack.id] ?? 0;
+        requestSeek(savedTime);
+      }
     }
 
     setExpanded(!isExpanded);
   };
 
-  const currentTrack = getTrack(activeTrack);
   const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
   const isFreePositioned = dragPosition !== null;
 
@@ -298,50 +474,31 @@ const FloatingPlayer = ({ className, ...rest }: Props) => {
       {/* ══════════════════════════════════════════════════
           DESKTOP — slide-in panel  (lg and above)
       ══════════════════════════════════════════════════ */}
-      <aside
-        ref={playerRef}
-        onMouseDown={handleMouseDragStart}
-        onTouchStart={handleTouchDragStart}
-        style={
-          dragPosition
-            ? {
-                left: dragPosition.x,
-                top: dragPosition.y,
-                right: "auto",
-                bottom: "auto",
-              }
-            : undefined
-        }
-        className={`
-          hidden lg:block
-          fixed z-50 select-none touch-none
-          ${isDragging ? "cursor-grabbing" : "cursor-grab"}
-          ${isFreePositioned ? "" : "right-8 bottom-8"}
-          ${className ?? ""}
-        `}
-        aria-label="Music player"
-        {...rest}
-      >
-        <button
-          data-songbar-drag-handle
-          onMouseDown={handleHandleMouseDown}
-          onTouchStart={handleHandleTouchStart}
-          onClick={handleTogglePlayer}
-          aria-label={isExpanded ? "Hide player" : "Show player"}
+      {isExpanded && (
+        <aside
+          ref={playerRef}
+          onMouseDown={handleMouseDragStart}
+          onTouchStart={handleTouchDragStart}
+          style={
+            dragPosition
+              ? {
+                  left: dragPosition.x,
+                  top: dragPosition.y,
+                  right: "auto",
+                  bottom: "auto",
+                }
+              : undefined
+          }
           className={`
-            absolute right-[36px] top-[27px] z-10 flex h-8 w-8 items-center justify-center rounded-lg
-            transition-all duration-300 ease-in-out cursor-grab active:cursor-grabbing
-            ${
-              isExpanded
-                ? "player-subtle player-control"
-                : "player-float-button border shadow-2xl shadow-black/20 backdrop-blur-xl player-control"
-            }
+            hidden lg:block
+            fixed z-50 select-none touch-none
+            ${isDragging ? "cursor-grabbing" : "cursor-grab"}
+            ${isFreePositioned ? "" : "right-8 bottom-8"}
+            ${className ?? ""}
           `}
+          aria-label="Music player"
+          {...rest}
         >
-          <MdRemove size={18} />
-        </button>
-
-        {/* Card */}
         <div
           className={`
             flex min-w-0 flex-col
@@ -351,15 +508,21 @@ const FloatingPlayer = ({ className, ...rest }: Props) => {
             shadow-2xl shadow-black/50
             ring-1 ring-[var(--player-border)]
             transition-[opacity,border-color,transform] duration-300 ease-in-out
-            ${
-              isExpanded
-                ? "w-[436px] translate-x-0 opacity-100 border"
-                : "w-[436px] scale-95 opacity-0 border border-transparent pointer-events-none"
-            }
+            w-[436px] translate-x-0 opacity-100 border
           `}
         >
           {/* Top accent line */}
           <div className="h-[2px] flex-shrink-0 bg-gradient-to-r from-violet-600 via-violet-400 to-transparent" />
+
+          {playerViewport === "desktop" && (
+            <YouTubePlayer
+              key={currentTrack?.id ?? "no-track"}
+              track={currentTrack}
+              onEnded={handleEnded}
+              onReadyChange={setYouTubeReady}
+              className="mx-4 mt-4"
+            />
+          )}
 
           <div className="flex flex-col gap-4 px-5 pt-4 pb-5">
             {/* ── Row 1: Album art | info | waveform | like ── */}
@@ -372,15 +535,48 @@ const FloatingPlayer = ({ className, ...rest }: Props) => {
                 <p className="player-text text-sm font-semibold truncate leading-tight tracking-tight">
                   {currentTrack?.title ?? "—"}
                 </p>
+                <button
+                  type="button"
+                  onClick={() => setShowTrackList(!showTrackList)}
+                  aria-label={showTrackList ? "Hide song list" : "Show song list"}
+                  aria-expanded={showTrackList}
+                  className="player-muted player-control mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] transition-colors"
+                >
+                  <MdQueueMusic size={13} />
+                  {showTrackList ? "Close list" : "Song list"}
+                </button>
               </div>
 
               <Waveform active={isPlaying} />
 
-              <div className="h-8 w-12 flex-shrink-0" aria-hidden />
+              <button
+                ref={desktopToggleRef}
+                data-songbar-drag-handle
+                onMouseDown={handleHandleMouseDown}
+                onTouchStart={handleHandleTouchStart}
+                onClick={handleTogglePlayer}
+                aria-label="Hide player"
+                className="player-subtle player-control -m-1.5 flex h-11 w-11 flex-shrink-0 touch-none cursor-grab items-center justify-center rounded-xl transition-colors active:cursor-grabbing"
+              >
+                <MdRemove size={18} />
+              </button>
             </div>
 
             {/* ── Row 2: Progress bar ── */}
             <ProgressBar className="w-full" />
+
+            {showTrackList && (
+              <div className="space-y-3">
+                <YouTubeImportForm onTrackImported={handleImportedTrack} />
+                <TrackList
+                  tracks={tracks}
+                  activeTrack={activeTrack}
+                  isPlaying={isPlaying}
+                  onTrackSelect={handleSelectTrack}
+                  onTrackRemove={handleRemoveTrack}
+                />
+              </div>
+            )}
 
             {/* ── Row 3: Shuffle | Controls | Volume | Repeat ── */}
             <div className="flex items-center justify-between">
@@ -396,6 +592,7 @@ const FloatingPlayer = ({ className, ...rest }: Props) => {
                 handlePlayPause={handlePlayPause}
                 handleNextSong={handleNextSong}
                 handlePrevSong={handlePrevSong}
+                playDisabled={isYouTubeLoading}
               />
 
               <VolumeControl />
@@ -410,7 +607,38 @@ const FloatingPlayer = ({ className, ...rest }: Props) => {
             </div>
           </div>
         </div>
-      </aside>
+        </aside>
+      )}
+      {!isExpanded && (
+        <button
+          ref={(node) => {
+            playerRef.current = node;
+          }}
+          data-songbar-drag-handle
+          onMouseDown={handleHandleMouseDown}
+          onTouchStart={handleHandleTouchStart}
+          onClick={handleTogglePlayer}
+          style={
+            dragPosition
+              ? {
+                  left: dragPosition.x,
+                  top: dragPosition.y,
+                  right: "auto",
+                  bottom: "auto",
+                }
+              : undefined
+          }
+          aria-label="Show player"
+          className={`
+            player-float-button fixed z-50 hidden h-11 w-11 touch-none items-center justify-center rounded-xl
+            border shadow-2xl shadow-black/20 backdrop-blur-xl transition-colors lg:flex
+            ${isDragging ? "cursor-grabbing" : "cursor-grab"}
+            ${isFreePositioned ? "" : "right-8 bottom-8"}
+          `}
+        >
+          <MdRemove size={18} />
+        </button>
+      )}
 
       {/* ══════════════════════════════════════════════════
           MOBILE — full-width bottom bar
@@ -433,6 +661,29 @@ const FloatingPlayer = ({ className, ...rest }: Props) => {
           />
         </div>
 
+        {playerViewport === "mobile" && (
+          <YouTubePlayer
+            key={currentTrack?.id ?? "no-track"}
+            track={currentTrack}
+            onEnded={handleEnded}
+            onReadyChange={setYouTubeReady}
+            className="mx-3 mt-3"
+          />
+        )}
+
+        {showTrackList && (
+          <div className="space-y-3 border-b border-[var(--player-border)] px-3 py-2">
+            <YouTubeImportForm onTrackImported={handleImportedTrack} />
+            <TrackList
+              tracks={tracks}
+              activeTrack={activeTrack}
+              isPlaying={isPlaying}
+              onTrackSelect={handleSelectTrack}
+              onTrackRemove={handleRemoveTrack}
+            />
+          </div>
+        )}
+
         <div className="flex items-center gap-3 px-4 py-3">
           {/* Album art */}
           <div className="flex-shrink-0 w-11 h-11 rounded-full overflow-hidden ring-1 ring-[var(--player-border)]">
@@ -444,6 +695,16 @@ const FloatingPlayer = ({ className, ...rest }: Props) => {
             <p className="player-text text-sm font-semibold truncate leading-tight">
               {currentTrack?.title ?? "—"}
             </p>
+            <button
+              type="button"
+              onClick={() => setShowTrackList(!showTrackList)}
+              aria-label={showTrackList ? "Hide song list" : "Show song list"}
+              aria-expanded={showTrackList}
+              className="player-muted player-control mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] transition-colors"
+            >
+              <MdQueueMusic size={13} />
+              {showTrackList ? "Close list" : "Song list"}
+            </button>
           </div>
 
           <button
@@ -462,6 +723,7 @@ const FloatingPlayer = ({ className, ...rest }: Props) => {
             handlePlayPause={handlePlayPause}
             handleNextSong={handleNextSong}
             handlePrevSong={handlePrevSong}
+            playDisabled={isYouTubeLoading}
           />
         </div>
       </div>
