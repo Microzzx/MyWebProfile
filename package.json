@@ -6,12 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
-    "@reduxjs/toolkit": "^2.8.2",
     "@tailwindcss/postcss": "^4.1.11",
-    "autoprefixer": "^10.4.21",
     "next": "^16.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

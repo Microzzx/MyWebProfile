@@ -1,58 +1,57 @@
 "use client";
-import React, { useRef, useEffect } from "react";
-import { usePlayerStore } from "@/feature/player/store";
 
-type PlayerProps = {
+import { useEffect, useRef } from "react";
+import { usePlayerStore } from "../player-store";
+import { getTrack, resolveAudioSource } from "../track-catalog";
+
+type Props = {
   onEnded: () => void;
 };
 
-const Player: React.FC<PlayerProps> = ({ onEnded }) => {
+const AudioPlayer = ({ onEnded }: Props) => {
   const ref = useRef<HTMLAudioElement | null>(null);
   const {
-    songList,
-    activeSong,
+    activeTrack,
     isPlaying,
     volume,
     isSeeking,
     setCurrentTime,
     setDuration,
   } = usePlayerStore();
+  const source = resolveAudioSource(getTrack(activeTrack));
 
-  const handleTimeUpdate = (): void => {
+  const handleTimeUpdate = () => {
     if (!ref.current || isSeeking) return;
     setCurrentTime(ref.current.currentTime);
   };
 
-  const handleLoadedMetadata = (): void => {
+  const handleLoadedMetadata = () => {
     if (!ref.current) return;
     setDuration(ref.current.duration);
     ref.current.volume = volume;
   };
 
-  // Play / pause when state changes
   useEffect(() => {
-    if (!ref.current || !songList) return;
+    if (!ref.current || !source) return;
     if (isPlaying) {
       ref.current.play().catch(() => {});
     } else {
       ref.current.pause();
     }
-  }, [isPlaying, activeSong, songList]);
+  }, [activeTrack, isPlaying, source]);
 
-  // Sync volume
   useEffect(() => {
     if (!ref.current) return;
     ref.current.volume = volume;
   }, [volume]);
 
-  if (!songList) return null;
+  if (!source) return null;
 
   return (
     <audio
       crossOrigin="anonymous"
       ref={ref}
-      src={songList[activeSong].url}
-      loop={false}
+      src={source}
       onTimeUpdate={handleTimeUpdate}
       onLoadedMetadata={handleLoadedMetadata}
       onEnded={onEnded}
@@ -60,4 +59,4 @@ const Player: React.FC<PlayerProps> = ({ onEnded }) => {
   );
 };
 
-export default Player;
+export default AudioPlayer;

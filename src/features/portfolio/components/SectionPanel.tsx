@@ -1,6 +1,11 @@
-import { SectionProps } from "@/types/types";
+import type { PropsWithChildren } from "react";
 
-const SectionBox = ({ children, id, className }: SectionProps) => {
+type Props = PropsWithChildren<{
+  id?: string;
+  className?: string;
+}>;
+
+const SectionPanel = ({ children, id, className }: Props) => {
   return (
     <section
       id={id}
@@ -11,4 +16,4 @@ const SectionBox = ({ children, id, className }: SectionProps) => {
   );
 };
 
-export default SectionBox;
+export default SectionPanel;

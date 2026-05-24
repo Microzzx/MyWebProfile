@@ -14,7 +14,7 @@ const NAV_ITEMS = [
   { label: "Contact", href: "#Contact" },
 ];
 
-const NavBar = ({ className, ...rest }: Props) => {
+const SiteHeader = ({ className, ...rest }: Props) => {
   const [open, setOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [theme, setTheme] = useState<Theme>("dark");
@@ -140,4 +140,4 @@ const NavBar = ({ className, ...rest }: Props) => {
   );
 };
 
-export default NavBar;
+export default SiteHeader;

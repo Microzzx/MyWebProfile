@@ -1,6 +1,6 @@
 "use client";
-import React, { ChangeEvent } from "react";
-import { usePlayerStore } from "@/feature/player/store";
+import type { ChangeEvent, MouseEvent, TouchEvent } from "react";
+import { usePlayerStore } from "../player-store";
 
 type Props = {
   width?: number;
@@ -13,7 +13,7 @@ const formatTime = (time: number): string => {
   return `${min}:${sec.toString().padStart(2, "0")}`;
 };
 
-const Progress = ({ width, className }: Props) => {
+const ProgressBar = ({ width, className }: Props) => {
   const { currentTime, duration, setCurrentTime, setSeeking } =
     usePlayerStore();
 
@@ -25,14 +25,14 @@ const Progress = ({ width, className }: Props) => {
 
   const handleMouseDown = () => setSeeking(true);
 
-  const handleMouseUp = (e: React.MouseEvent<HTMLInputElement>) => {
+  const handleMouseUp = (e: MouseEvent<HTMLInputElement>) => {
     const audio = document.querySelector("audio") as HTMLAudioElement | null;
     if (audio) audio.currentTime = Number(e.currentTarget.value);
     setSeeking(false);
   };
 
   // Touch support for mobile
-  const handleTouchEnd = (e: React.TouchEvent<HTMLInputElement>) => {
+  const handleTouchEnd = (e: TouchEvent<HTMLInputElement>) => {
     const audio = document.querySelector("audio") as HTMLAudioElement | null;
     if (audio) audio.currentTime = Number(e.currentTarget.value);
     setSeeking(false);
@@ -102,4 +102,4 @@ const Progress = ({ width, className }: Props) => {
   );
 };
 
-export default Progress;
+export default ProgressBar;

@@ -1,18 +1,18 @@
 "use client";
-import React, { ChangeEvent } from "react";
+import type { ChangeEvent } from "react";
 import {
   BsFillVolumeUpFill,
   BsVolumeDownFill,
   BsFillVolumeMuteFill,
 } from "react-icons/bs";
-import { usePlayerStore } from "@/feature/player/store";
+import { usePlayerStore } from "../player-store";
 
 type VolumeProps = {
   min?: number;
   max?: number;
 };
 
-const Volume: React.FC<VolumeProps> = ({ min = 0, max = 1 }) => {
+const VolumeControl = ({ min = 0, max = 1 }: VolumeProps) => {
   const { volume, setVolume } = usePlayerStore();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -84,4 +84,4 @@ const Volume: React.FC<VolumeProps> = ({ min = 0, max = 1 }) => {
   );
 };
 
-export default Volume;
+export default VolumeControl;

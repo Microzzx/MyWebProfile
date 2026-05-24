@@ -1,6 +1,6 @@
 type Props = React.HTMLAttributes<HTMLElement>;
 
-const VideoBox = ({ className, ...rest }: Props) => {
+const BackgroundVideo = ({ className, ...rest }: Props) => {
   return (
     <div className={`fixed inset-0 -z-10 w-full ${className ?? ""}`} {...rest}>
       <video className="h-full w-full object-cover object-top" autoPlay loop muted playsInline>
@@ -11,4 +11,4 @@ const VideoBox = ({ className, ...rest }: Props) => {
   );
 };
 
-export default VideoBox;
+export default BackgroundVideo;
