@@ -7,4 +7,5 @@ export type LayoutProps = {
 export type SectionProps = {
   children: ReactNode;
   id?: string;
+  className?: string;
 };

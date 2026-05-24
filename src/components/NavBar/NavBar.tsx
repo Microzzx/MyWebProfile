@@ -6,9 +6,10 @@ import { BsList, BsXLg } from "react-icons/bs";
 type Props = React.HTMLAttributes<HTMLElement>;
 
 const NAV_ITEMS = [
-  { label: "About", href: "#Aboutme" },
+  { label: "About", href: "#About" },
+  { label: "Experience", href: "#Experience" },
   { label: "Skills", href: "#Skills" },
-  { label: "Projects", href: "#Project" },
+  { label: "Education", href: "#Education" },
   { label: "Contact", href: "#Contact" },
 ];
 
@@ -54,14 +55,14 @@ const NavBar = ({ className, ...rest }: Props) => {
           className="group flex items-center gap-3"
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/15 text-sm font-bold text-violet-300 ring-1 ring-violet-400/25 transition-colors group-hover:bg-violet-500/25">
-            MP
+            JP
           </span>
           <span className="flex flex-col">
             <span className="text-sm font-semibold tracking-wide text-white/95 sm:text-base">
-              My Portfolio
+              Janekit Prakittawornkul
             </span>
             <span className="text-[10px] uppercase tracking-[0.24em] text-white/35">
-              Front-end developer
+              Backend / Web Developer
             </span>
           </span>
         </Link>

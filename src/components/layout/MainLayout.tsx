@@ -8,7 +8,9 @@ export default function MainLayout({ children }: LayoutProps) {
       <NavBar className="z-50" />
       <SongBar className="z-40" />
       <VideoBox className="z-0" />
-      <div className="relative p-10 pt-[120px] pb-20">{children}</div>
+      <main className="relative mx-auto max-w-6xl px-4 pb-28 pt-[108px] sm:px-6 sm:pt-[116px]">
+        {children}
+      </main>
     </>
   );
 }
