@@ -387,7 +387,7 @@ const SongBar = ({ className, ...rest }: Props) => {
 
               <Waveform active={isPlaying} />
 
-              <div className="h-8 w-8 flex-shrink-0" aria-hidden />
+              <div className="h-8 w-12 flex-shrink-0" aria-hidden />
             </div>
 
             {/* ── Row 2: Progress bar ── */}
