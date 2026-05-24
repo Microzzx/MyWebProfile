@@ -1,7 +1,6 @@
 "use client";
 
 import { usePlayerStore } from "../player-store";
-import { getTrack } from "../track-catalog";
 
 type Props = {
   width?: number;
@@ -10,8 +9,8 @@ type Props = {
 };
 
 const TrackArtwork = ({ width = 48, height = 48, className }: Props) => {
-  const { activeTrack, isPlaying } = usePlayerStore();
-  const track = getTrack(activeTrack);
+  const { tracks, activeTrack, isPlaying } = usePlayerStore();
+  const track = tracks[activeTrack];
 
   if (!track) return null;
 

@@ -34,9 +34,27 @@ loaded from a public JSON file. The `TrackSource` type supports local audio,
 Spotify references, and YouTube references without changing the player UI.
 
 Local tracks play through the current HTML audio component. Adding Spotify or
-YouTube playback later only requires a provider adapter at the
-`resolveAudioSource` boundary, plus any provider-specific authorization or
-embed handling.
+other playback providers later can be handled at the provider boundary.
+
+### YouTube Import
+
+The song list accepts YouTube video links. Metadata is loaded server-side with
+the YouTube Data API v3, and imported tracks play through the official YouTube
+IFrame player.
+
+Create `.env.local` from `.env.example` and provide a YouTube Data API v3 key:
+
+```bash
+YOUTUBE_DATA_API_KEY=your_youtube_data_api_v3_key
+```
+
+The key remains server-side in the `/api/tracks/youtube` route and is never
+exposed to the browser.
+Imported YouTube tracks and each track's last progress position are saved in
+the current browser's local storage. Playback is restored paused, so the user
+must press Play after a page reload in accordance with browser autoplay rules.
+Videos whose owners disable embedded playback cannot be played inside the
+portfolio player.
 
 ## Commands
 
